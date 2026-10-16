@@ -1,0 +1,9 @@
+.env
+*.service-account.json
+credentials/
+.venv/
+.venv-*/
+__pycache__/
+config.h
+**/config.h
+

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AquaAI | Live USB Monitor</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07131c; --panel:#102330; --line:#264454; --text:#edf7fb; --muted:#a6c0cc; --aqua:#52d7d0; --warn:#f4c66a; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui,-apple-system,Segoe UI,sans-serif; background:radial-gradient(ellipse at top,#12313d 0,#07131c 55%); color:var(--text); min-height:100vh; }
+    main { width:min(1050px,94%); margin:0 auto; padding:28px 0 40px; }
+    header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; margin-bottom:22px; }
+    .eyebrow { color:var(--aqua); font-size:.78rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:.25rem 0; font-size:clamp(1.8rem,5vw,2.8rem); }
+    p { color:var(--muted); line-height:1.55; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; }
+    button { border:0; border-radius:10px; padding:12px 16px; font:inherit; font-weight:750; cursor:pointer; }
+    #connectBtn { background:var(--aqua); color:#062027; }
+    #disconnectBtn { background:#28424f; color:var(--text); }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .status { display:flex; align-items:center; gap:10px; border:1px solid var(--line); background:#0c202b; border-radius:12px; padding:13px 15px; margin:18px 0; }
+    .dot { width:10px; height:10px; border-radius:50%; background:#8296a0; flex-shrink:0; }
+    .dot.live { background:#61e6a6; box-shadow:0 0 12px #61e6a680; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+    .card { border:1px solid var(--line); background:linear-gradient(145deg,#122b38,#0c1d28); border-radius:16px; padding:19px; min-height:165px; }
+    .label { color:var(--muted); font-size:.9rem; }
+    .value { font-size:clamp(1.8rem,4vw,2.5rem); font-weight:800; margin:14px 0 5px; letter-spacing:-.04em; overflow-wrap:anywhere; }
+    .unit { color:var(--aqua); font-size:.95rem; font-weight:650; }
+    .detail { color:var(--muted); font-size:.88rem; margin-top:8px; }
+    h2 { font-size:1.1rem; margin:24px 0 8px; }
+    #log { border:1px solid var(--line); border-radius:12px; background:#061018; padding:13px; height:190px; overflow:auto; white-space:pre-wrap; word-break:break-word; font: .82rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; color:#c5e0e9; }
+    .notice { border-left:3px solid var(--warn); padding:8px 12px; margin-top:18px; background:#2a2619; border-radius:0 8px 8px 0; font-size:.9rem; }
+    .foot { font-size:.82rem; margin-top:16px; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">Intelligent Water Guardian</div>
+      <h1>AquaAI Live Monitor</h1>
+      <p>Read sensor data directly from your physical ESP32 through USB. No Wi-Fi required.</p>
+    </div>
+    <div class="actions">
+      <button id="connectBtn">Connect ESP32</button>
+      <button id="disconnectBtn" disabled>Disconnect</button>
+    </div>
+  </header>
+
+  <div class="status" role="status" aria-live="polite">
+    <span class="dot" id="statusDot"></span>
+    <div><strong id="statusTitle">Not connected</strong><div class="detail" id="statusText">Connect the ESP32, then select its serial/COM port.</div></div>
+  </div>
+
+  <section class="grid" aria-label="Live sensor readings">
+    <article class="card">
+      <div class="label">TDS estimate</div>
+      <div class="value" id="tdsValue">—</div>
+      <div class="unit">ppm (uncalibrated estimate)</div>
+      <div class="detail" id="tdsDetail">Waiting for ESP32 data</div>
+    </article>
+    <article class="card">
+      <div class="label">Turbidity sensor signal</div>
+      <div class="value" id="turbidityValue">—</div>
+      <div class="unit">raw ADC counts · not NTU</div>
+      <div class="detail" id="turbidityDetail">Waiting for ESP32 data</div>
+    </article>
+    <article class="card">
+      <div class="label">Water temperature</div>
+      <div class="value" id="tempValue">—</div>
+      <div class="unit">°C</div>
+      <div class="detail" id="tempDetail">The current firmware must print a Temperature: value in °C.</div>
+    </article>
+    <article class="card">
+      <div class="label">Last data received</div>
+      <div class="value" style="font-size:1.5rem" id="updatedValue">—</div>
+      <div class="unit">local browser time</div>
+      <div class="detail">Updates when a recognised sensor reading arrives.</div>
+    </article>
+  </section>
+
+  <div class="notice"><strong>Important:</strong> The TDS number is only a formula-based estimate until your specific module is calibrated. Turbidity is shown as a raw signal, not NTU. These readings do not prove that water is safe to drink.</div>
+  <h2>Serial output</h2>
+  <div id="log" aria-live="polite">Serial messages will appear here after connecting.</div>
+  <p class="foot">Requires a supported desktop browser (Chrome or Edge) and a secure page context such as <code>http://localhost</code> or HTTPS. Close Arduino IDE Serial Monitor before connecting this page.</p>
+</main>
+<script>
+(() => {
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  const statusDot = document.getElementById('statusDot');
+  const statusTitle = document.getElementById('statusTitle');
+  const statusText = document.getElementById('statusText');
+  const logElement = document.getElementById('log');
+
+  let port = null;
+  let reader = null;
+  let keepReading = false;
+  let connected = false;
+
+  function setStatus(title, message, live = false) {
+    statusTitle.textContent = title;
+    statusText.textContent = message;
+    statusDot.classList.toggle('live', live);
+  }
+
+  function addLog(line) {
+    const timestamp = new Date().toLocaleTimeString();
+    if (logElement.textContent === 'Serial messages will appear here after connecting.') logElement.textContent = '';
+    logElement.textContent += `[${timestamp}] ${line}\n`;
+    const lines = logElement.textContent.split('\n');
+    if (lines.length > 120) logElement.textContent = lines.slice(-100).join('\n');
+    logElement.scrollTop = logElement.scrollHeight;
+  }
+
+  function markUpdated() {
+    document.getElementById('updatedValue').textContent = new Date().toLocaleTimeString();
+    setStatus('ESP32 connected', 'Receiving serial data from the USB port.', true);
+  }
+
+  function processLine(rawLine) {
+    const line = rawLine.trim();
+    if (!line) return;
+    addLog(line);
+
+    // Matches the current firmware format: TDS: estimated 551 ppm | ADC: 1816 | Pin voltage: 1.440 V
+    const tdsMatch = line.match(/TDS:\s*estimated\s*(-?\d+(?:\.\d+)?)\s*ppm/i);
+    if (tdsMatch) {
+      document.getElementById('tdsValue').textContent = Number(tdsMatch[1]).toFixed(0);
+      const adcMatch = line.match(/\bADC:\s*(\d+)/i);
+      const voltageMatch = line.match(/Pin voltage:\s*(\d+(?:\.\d+)?)\s*V/i);
+      document.getElementById('tdsDetail').textContent =
+        `ADC: ${adcMatch ? adcMatch[1] : '—'} · Pin voltage: ${voltageMatch ? voltageMatch[1] + ' V' : '—'}`;
+      markUpdated();
+    }
+
+    // Matches: Turbidity: ADC 2496 | Pin voltage: 2.185 V
+    const turbidityMatch = line.match(/Turbidity:\s*ADC\s*(\d+)/i);
+    if (turbidityMatch) {
+      document.getElementById('turbidityValue').textContent = turbidityMatch[1];
+      const voltageMatch = line.match(/Pin voltage:\s*(\d+(?:\.\d+)?)\s*V/i);
+      document.getElementById('turbidityDetail').textContent =
+        `Pin voltage: ${voltageMatch ? voltageMatch[1] + ' V' : '—'}`;
+      markUpdated();
+    }
+
+    // Future-compatible: firmware may print e.g. "Temperature: 25.4 C"
+    const tempMatch = line.match(/(?:Water\s+)?Temperature:\s*(-?\d+(?:\.\d+)?)\s*°?\s*C\b/i);
+    if (tempMatch) {
+      document.getElementById('tempValue').textContent = Number(tempMatch[1]).toFixed(1);
+      document.getElementById('tempDetail').textContent = 'DS18B20 reading received';
+      markUpdated();
+    }
+  }
+
+  async function connectESP32() {
+    if (!('serial' in navigator)) {
+      setStatus('Web Serial unavailable', 'Open this page in desktop Chrome or Edge using localhost or HTTPS.');
+      return;
+    }
+    try {
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      connected = true;
+      keepReading = true;
+      connectBtn.disabled = true;
+      disconnectBtn.disabled = false;
+      setStatus('Port opened', 'Waiting for AquaAI sensor messages…', true);
+      reader = port.readable.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (keepReading) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split(/\r?\n/);
+        buffer = chunks.pop() ?? '';
+        for (const chunk of chunks) processLine(chunk);
+      }
+    } catch (error) {
+      if (error && error.name !== 'NotFoundError' && error.name !== 'AbortError') {
+        setStatus('Connection error', error.message || String(error));
+      } else if (error && error.name === 'NotFoundError') {
+        setStatus('No port selected', 'Click Connect ESP32 and select the board port.');
+      }
+    } finally {
+      keepReading = false;
+      if (reader) {
+        try { reader.releaseLock(); } catch (_) {}
+        reader = null;
+      }
+      if (port) {
+        try { await port.close(); } catch (_) {}
+        port = null;
+      }
+      connected = false;
+      connectBtn.disabled = false;
+      disconnectBtn.disabled = true;
+      if (statusTitle.textContent === 'ESP32 connected' || statusTitle.textContent === 'Port opened') {
+        setStatus('Disconnected', 'Connect the ESP32 to resume live readings.');
+      }
+    }
+  }
+
+  async function disconnectESP32() {
+    keepReading = false;
+    if (reader) {
+      try { await reader.cancel(); } catch (_) {}
+    } else if (port) {
+      try { await port.close(); } catch (_) {}
+      port = null;
+    }
+    setStatus('Disconnecting', 'Closing the serial connection…');
+  }
+
+  connectBtn.addEventListener('click', connectESP32);
+  disconnectBtn.addEventListener('click', disconnectESP32);
+})();
+</script>
+</body>
+</html>

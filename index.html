@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="jal-raksha-api-base" content="" />
+    <title>Jal Raksha | Intelligent Water Guardian</title>
+    <meta
+      name="description"
+      content="Jal Raksha is an AIoT water-quality monitoring dashboard for anomaly detection, prediction and explainable insight."
+    />
+    <link rel="stylesheet" href="styles.css?v=5" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark" aria-label="Jal Raksha water shield icon">
+            <span class="drop"></span>
+            <span class="shield"></span>
+          </div>
+          <div>
+            <h1>JAL RAKSHA</h1>
+            <p>Intelligent Water Guardian</p>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-item active" data-target="overview"><span>Overview</span></button>
+          <button class="nav-item" data-target="monitoring"><span>Live Monitoring</span></button>
+          <button class="nav-item" data-target="map"><span>Water Map</span></button>
+          <button class="nav-item" data-target="analysis"><span>AI Analysis</span></button>
+          <button class="nav-item" data-target="alerts"><span>Alerts</span></button>
+          <button class="nav-item" data-target="nodes"><span>Sensor Nodes</span></button>
+          <button class="nav-item" data-target="health"><span>Sensor Health</span></button>
+          <button class="nav-item" data-target="calibration"><span>Calibration</span></button>
+          <button class="nav-item" data-target="demo"><span>Demo Mode</span></button>
+          <button class="nav-item" data-target="settings"><span>Settings</span></button>
+          <button class="nav-item" data-target="about"><span>About</span></button>
+        </nav>
+
+        <div class="sidebar-footer card compact">
+          <div class="status-row">
+            <span class="status-dot live"></span>
+            <span>System Status</span>
+          </div>
+          <strong id="sidebarSystemStatus">Demo Mode</strong>
+        </div>
+      </aside>
+
+      <div class="main-panel">
+        <header class="topbar">
+          <div class="header-search-wrap">
+            <p class="eyebrow">Water Quality Command Center</p>
+            <h2>Detect. Locate. Predict. Explain. Act.</h2>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="search-box">
+              <button class="search-icon" id="searchToggleButton" type="button" aria-label="Open search" aria-expanded="false">⌕</button>
+              <input id="globalSearchInput" type="text" placeholder="Search node, alert, sensor..." />
+              <div id="searchResults" class="search-results hidden" role="listbox" aria-label="Search results"></div>
+            </div>
+
+            <div class="notification-wrap">
+              <button class="icon-button" id="notificationButton" aria-label="Notifications" aria-expanded="false" aria-controls="notificationDropdown">
+                <span>🔔</span>
+                <span class="badge" id="notificationBadge"></span>
+              </button>
+              <div id="notificationDropdown" class="notification-dropdown hidden" role="dialog" aria-label="Notifications"></div>
+            </div>
+
+            <div class="voice-guide-wrap">
+              <button class="voice-guide-trigger" id="voiceGuideButton" type="button" aria-label="आवाज़ गाइड / Voice Guide" aria-haspopup="dialog" aria-expanded="false" aria-controls="voiceGuidePanel">
+                <span aria-hidden="true">🔊</span>
+                <span>आवाज़ गाइड / Voice Guide</span>
+              </button>
+              <aside class="voice-guide-panel hidden" id="voiceGuidePanel" role="dialog" aria-label="आवाज़ गाइड / Voice Guide">
+                <div class="voice-panel-header">
+                  <div>
+                    <p class="eyebrow">Jal Raksha</p>
+                    <h3>आवाज़ गाइड / Voice Guide</h3>
+                  </div>
+                  <button class="voice-close-button" id="voiceGuideClose" type="button" aria-label="Close Voice Guide">×</button>
+                </div>
+
+                <section class="voice-welcome-card hidden" id="voiceWelcomeCard" aria-labelledby="voiceWelcomeTitle">
+                  <h4 id="voiceWelcomeTitle">Welcome to Jal Raksha</h4>
+                  <p id="voiceWelcomeText">Choose Hindi or English, then listen to a short introduction. You can skip it and use the dashboard at any time.</p>
+                  <div class="voice-welcome-actions">
+                    <button class="primary-button" id="voiceWelcomePlay" type="button">Play welcome</button>
+                    <button class="secondary-button" id="voiceWelcomeSkip" type="button">Skip</button>
+                  </div>
+                </section>
+
+                <fieldset class="voice-language-picker">
+                  <legend>Language / भाषा</legend>
+                  <button class="voice-language-button active" type="button" data-voice-language="hi-IN" aria-pressed="true">हिंदी</button>
+                  <button class="voice-language-button" type="button" data-voice-language="en-IN" aria-pressed="false">English</button>
+                </fieldset>
+
+                <div class="voice-preferences">
+                  <label>
+                    <span>Speech speed / बोलने की गति</span>
+                    <select id="voiceRateSelect" aria-label="Speech speed / बोलने की गति">
+                      <option value="1">Normal / सामान्य</option>
+                      <option value="0.85">Slower / धीमी</option>
+                    </select>
+                  </label>
+                  <label class="voice-check-row">
+                    <input id="voiceDetailedToggle" type="checkbox" />
+                    <span>Explain in detail / विस्तार से समझें</span>
+                  </label>
+                  <label class="voice-check-row">
+                    <input id="voiceAutoIntroToggle" type="checkbox" />
+                    <span>Automatic short page introduction / पेज का छोटा परिचय अपने आप सुनें</span>
+                  </label>
+                </div>
+
+                <div class="voice-playback-controls" aria-label="Speech controls">
+                  <button class="primary-button" id="voiceListenButton" type="button">Listen / सुनें</button>
+                  <button class="secondary-button" id="voicePauseButton" type="button">Pause / रोकें</button>
+                  <button class="secondary-button" id="voiceResumeButton" type="button">Resume / जारी रखें</button>
+                  <button class="secondary-button" id="voiceStopButton" type="button">Stop / बंद करें</button>
+                  <button class="secondary-button" id="voiceReplayButton" type="button">Replay / फिर सुनें</button>
+                </div>
+                <button class="voice-replay-welcome" id="voiceReplayWelcome" type="button">Replay welcome / स्वागत परिचय फिर सुनें</button>
+                <p class="voice-playback-status" id="voicePlaybackStatus" role="status" aria-live="polite">Ready / तैयार</p>
+                <p class="voice-playback-error hidden" id="voicePlaybackError" role="alert"></p>
+                <button class="secondary-button voice-retry-button hidden" id="voiceRetryButton" type="button">Retry / फिर कोशिश करें</button>
+                <audio class="voice-audio-player hidden" id="voiceAudioPlayer" controls preload="none" aria-label="Hindi voice playback"></audio>
+                <div class="voice-transcript" id="voiceTranscript" aria-label="Voice guide transcript" tabindex="0"></div>
+                <p class="voice-volume-note">Device volume is controlled by your phone or computer. / आवाज़ की मात्रा आपके फोन या कंप्यूटर से नियंत्रित होती है।</p>
+              </aside>
+            </div>
+
+            <div class="profile-pill">
+              <div class="avatar">MR</div>
+              <div>
+                <strong>Municipal Ops</strong>
+                <small>Operator</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section id="overview" class="page active">
+            <div class="hero-panel card">
+              <div class="hero-copy">
+                <span class="feature-tag">DEMO DATA</span>
+                <h3>Know when water quality changes — before the problem gets bigger.</h3>
+                <p>
+                  Jal Raksha combines low-cost sensor nodes, rule-based prototype anomaly detection, short-term trend estimates and explainable monitoring insights to help teams identify unusual water-quality changes early.
+                </p>
+                <div class="hero-flow" aria-label="System flow">
+                  <span>SENSORS</span>
+                  <span>↓</span>
+                  <span>AI ENGINE</span>
+                  <span>↓</span>
+                  <span>ANOMALY DETECTION</span>
+                  <span>↓</span>
+                  <span>PREDICTION</span>
+                  <span>↓</span>
+                  <span>EXPLAINABLE INSIGHT</span>
+                  <span>↓</span>
+                  <span>ACTION</span>
+                </div>
+              </div>
+              <div class="hero-metrics">
+                <div class="metric-eyebrow">Overall System Status</div>
+                <div class="metric-readout"><span id="overallStatusText">Stable</span></div>
+                <div class="mini-summary">
+                  <div><strong id="metricNodes">0</strong><span>Active nodes</span></div>
+                  <div><strong id="metricNormal">0</strong><span>Normal</span></div>
+                  <div><strong id="metricWarning">0</strong><span>Warning</span></div>
+                  <div><strong id="metricCritical">0</strong><span>Critical</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <article class="stat-card card accent-green">
+                <div class="stat-head">
+                  <span class="label">Active Nodes</span>
+                  <span class="pill success">Live</span>
+                </div>
+                <h3 id="activeNodesValue">0</h3>
+              </article>
+
+              <article class="stat-card card accent-blue">
+                <div class="stat-head">
+                  <span class="label">Normal</span>
+                  <span class="pill neutral">Stable</span>
+                </div>
+                <h3 id="normalNodesValue">0</h3>
+              </article>
+
+              <article class="stat-card card accent-amber">
+                <div class="stat-head">
+                  <span class="label">Warning</span>
+                  <span class="pill warning">Monitor</span>
+                </div>
+                <h3 id="warningNodesValue">0</h3>
+              </article>
+
+              <article class="stat-card card accent-red">
+                <div class="stat-head">
+                  <span class="label">Critical</span>
+                  <span class="pill danger">Attention</span>
+                </div>
+                <h3 id="criticalNodesValue">0</h3>
+              </article>
+            </div>
+
+            <div class="panel-grid two-col">
+              <section class="card panel-block">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Monitoring overview</p>
+                    <h3>Water Quality Trend</h3>
+                  </div>
+                  <span class="demo-badge" id="overviewModeBadge">DEMO MODE</span>
+                </div>
+                <div class="chart-wrap">
+                  <svg id="trendChartOverview" viewBox="0 0 640 280" role="img" aria-label="Overview trend chart"></svg>
+                </div>
+              </section>
+
+              <section class="card panel-block compact">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">System summary</p>
+                    <h3>Latest anomaly</h3>
+                  </div>
+                </div>
+                <div class="latest-anomaly-box">
+                  <div class="badges-row">
+                    <span class="status-pill critical" id="latestAnomalyLevel">High anomaly</span>
+                    <span class="small-tag" id="latestAnomalyNode">Node JR-04</span>
+                  </div>
+                  <div class="system-health-ring">
+                    <div class="ring-inner">
+                      <strong id="systemHealthValue">96%</strong>
+                      <span>System Health</span>
+                    </div>
+                  </div>
+                  <div class="last-update-box">
+                    <span>Last data update</span>
+                    <strong id="lastDataUpdate">3 sec ago</strong>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div class="panel-grid two-col">
+              <section class="card panel-block">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Water quality score</p>
+                    <h3>Prototype Water Quality Score</h3>
+                  </div>
+                  <button class="voice-context-button" type="button" data-voice-context="overview-score">🔊 Read score</button>
+                </div>
+                <div class="quality-index-box">
+                  <div class="quality-ring" id="waterQualityRing">
+                    <div class="quality-inner">
+                      <strong id="waterQualityValue">78</strong>
+                      <span>/ 100</span>
+                    </div>
+                  </div>
+                  <div class="quality-meta">
+                    <h4 id="waterQualityLabel">Good</h4>
+                    <p>Monitoring score from available readings; not a certified drinking-water safety assessment.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card panel-block">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Interpretation</p>
+                    <h3>Monitoring note</h3>
+                  </div>
+                </div>
+                <div class="note-box">
+                  <p id="overviewMonitoringNote">Readings are compared with each node's recent baseline. Prototype monitoring scores are not certified drinking-water safety assessments.</p>
+                </div>
+              </section>
+            </div>
+
+            <div class="panel-grid two-col">
+              <section class="card panel-block">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Primary parameters</p>
+                    <h3>Current water quality profile</h3>
+                  </div>
+                </div>
+                <div class="parameter-list" id="overviewParameterList"></div>
+              </section>
+
+              <section class="card panel-block">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Multi-node comparison</p>
+                    <h3>Node Comparison</h3>
+                  </div>
+                </div>
+                <div id="comparisonTable" class="comparison-table"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="monitoring" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Live field telemetry</p>
+                <h3>Live Monitoring</h3>
+              </div>
+              <div class="page-header-actions">
+                <span class="live-status badged" id="liveStatusBadge">● DEMO MODE</span>
+                <label class="monitor-node-picker"><span>Selected node</span><select id="monitorNodeSelect"></select></label>
+                <span class="demo-badge" id="dataModeBadge">Demo Data</span>
+              </div>
+            </div>
+            <section class="card thingspeak-panel" aria-labelledby="thingspeakHeading">
+              <div class="thingspeak-heading">
+                <div>
+                  <p class="eyebrow">AQUAAI · THINGSPEAK</p>
+                  <h3 id="thingspeakHeading">ESP32 sensor inputs</h3>
+                  <p class="thingspeak-subtitle">Public ThingSpeak feed · raw ESP32 sensor inputs</p>
+                </div>
+                <div class="thingspeak-heading-actions">
+                  <span class="thingspeak-mode untagged" id="thingSpeakMode">MODE NOT TAGGED · WAITING</span>
+                  <button class="secondary-button" id="thingSpeakRefreshButton" type="button">Refresh</button>
+                </div>
+              </div>
+              <form class="thingspeak-channel-form" id="thingSpeakChannelForm">
+                <label for="thingSpeakChannelInput">Public ThingSpeak Channel ID</label>
+                <input id="thingSpeakChannelInput" name="channelId" inputmode="numeric" pattern="[0-9]+" autocomplete="off" placeholder="Enter your public channel ID" value="3530012" required />
+                <button class="primary-button" id="thingSpeakConnectButton" type="submit">Connect channel</button>
+                <span class="thingspeak-status" id="thingSpeakStatus" role="status" aria-live="polite">Enter a public channel ID to load ESP32 readings.</span>
+              </form>
+              <div class="thingspeak-state hidden" id="thingSpeakState" role="status" aria-live="polite"></div>
+              <div class="thingspeak-reading-grid" aria-label="Latest raw sensor inputs">
+                <article class="thingspeak-reading">
+                  <span>TDS input · GPIO34</span>
+                  <strong id="thingSpeakTdsValue">—</strong>
+                  <small>ADC counts · uncalibrated</small>
+                  <small>Nominal voltage estimate · <span id="thingSpeakTdsVoltage">—</span></small>
+                </article>
+                <article class="thingspeak-reading">
+                  <span>Turbidity input · GPIO35</span>
+                  <strong id="thingSpeakTurbidityValue">—</strong>
+                  <small>ADC counts · uncalibrated</small>
+                  <small>Nominal voltage estimate · <span id="thingSpeakTurbidityVoltage">—</span></small>
+                </article>
+                <article class="thingspeak-reading">
+                  <span>Latest cloud timestamp</span>
+                  <strong id="thingSpeakTimestamp">—</strong>
+                  <small id="thingSpeakDevice">No ThingSpeak data received</small>
+                </article>
+                <article class="thingspeak-reading">
+                  <span>Last successful check</span>
+                  <strong id="thingSpeakLastSuccess">—</strong>
+                  <small id="thingSpeakConnection">Waiting for channel</small>
+                </article>
+              </div>
+              <div class="thingspeak-chart-section">
+                <div class="thingspeak-chart-heading">
+                  <div><strong>Recent raw ADC readings</strong><small>ThingSpeak history · current operating mode only</small></div>
+                  <span class="thingspeak-chart-legend"><i class="tds-key"></i>TDS ADC <i class="turbidity-key"></i>Turbidity ADC</span>
+                </div>
+                <div class="thingspeak-chart-wrap">
+                  <canvas id="thingSpeakChart" role="img" aria-label="Historical chart of TDS and turbidity raw ADC inputs"></canvas>
+                  <span class="thingspeak-chart-empty" id="thingSpeakChartEmpty">No channel readings yet.</span>
+                </div>
+              </div>
+              <div class="thingspeak-alerts">
+                <strong>Sudden signal changes</strong>
+                <span id="thingSpeakAlertList">No channel data to inspect.</span>
+              </div>
+              <p class="thingspeak-notice" id="thingSpeakNotice">Waiting for feed data; values are raw ADC readings and are not calibrated water-quality measurements.</p>
+            </section>
+            <div id="liveMonitoringGrid" class="monitoring-grid"></div>
+            <div class="card event-log live-event-log">
+              <div class="section-header small-gap"><div><p class="eyebrow">Shared system activity</p><h3>Live Event Timeline</h3></div></div>
+              <ul class="timeline" id="eventTimeline"></ul>
+            </div>
+          </section>
+
+          <section id="map" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Geospatial overview</p>
+                <h3>Water Quality Map</h3>
+              </div>
+              <div class="toolbar-group">
+                <div class="filter-group">
+                  <button class="filter-chip active" data-map-filter="all">All nodes</button>
+                  <button class="filter-chip" data-map-filter="normal">Normal</button>
+                  <button class="filter-chip" data-map-filter="warning">Warning</button>
+                  <button class="filter-chip" data-map-filter="critical">Critical</button>
+                  <button class="filter-chip" data-map-filter="offline">Offline</button>
+                </div>
+                <div class="filter-group small-gap">
+                  <button class="filter-chip time" data-time-filter="live">Live</button>
+                  <button class="filter-chip time" data-time-filter="24h">Last 24 hours</button>
+                  <button class="filter-chip time" data-time-filter="7d">Last 7 days</button>
+                </div>
+              </div>
+            </div>
+            <div class="map-layout">
+              <div class="card map-panel">
+                <svg id="waterMap" viewBox="0 0 760 420" role="img" aria-label="Water quality map"></svg>
+              </div>
+              <aside class="card map-detail">
+                <div class="section-header small-gap">
+                  <div>
+                    <p class="eyebrow">Selected node</p>
+                    <h3 id="mapDetailTitle">JR-04</h3>
+                  </div>
+                  <div>
+                    <span class="status-pill warning" id="mapDetailStatus">WARNING</span>
+                    <button class="voice-context-button" type="button" data-voice-context="node-readings">🔊 Read readings</button>
+                  </div>
+                </div>
+                <div class="detail-list" id="mapDetailList"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="analysis" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Rule-based prototype insight</p>
+                <h3>AI Water Quality Analysis</h3>
+              </div>
+              <div class="page-header-actions">
+                <span class="demo-badge">DEMO MODE</span>
+                <button class="voice-context-button" type="button" data-voice-context="analysis">🔊 Read analysis</button>
+              </div>
+            </div>
+
+            <div class="analysis-layout">
+              <div class="card summary-tile">
+                <div class="summary-header">
+                  <span class="eyebrow">Prototype Anomaly Score</span>
+                  <h3 id="analysisAnomalyScore">82 / 100</h3>
+                </div>
+                <div class="status-pill critical" id="analysisStatus">HIGH ANOMALY</div>
+              </div>
+
+              <div class="card analysis-panel">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Observed change</p>
+                    <h3>What changed?</h3>
+                  </div>
+                </div>
+                <ul class="change-list" id="analysisChanges"></ul>
+              </div>
+
+              <div class="card analysis-panel">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Baseline</p>
+                    <h3>Compare With Baseline</h3>
+                  </div>
+                </div>
+                <div id="baselineComparison" class="baseline-comparison"></div>
+              </div>
+
+              <div class="card analysis-panel">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Interpretation</p>
+                    <h3>What may be happening?</h3>
+                  </div>
+                </div>
+                <p class="analysis-text" id="analysisNarrative">
+                  An unusual change was detected compared with the node's recent baseline.
+                </p>
+              </div>
+
+              <div class="card analysis-panel wide">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Forecasting</p>
+                    <h3>What happens next?</h3>
+                  </div>
+                </div>
+                <p class="analysis-text" id="predictionText">
+                  Current trend indicates that the anomaly may continue increasing over the next 30–60 minutes if the current pattern persists.
+                </p>
+                <svg id="predictionChart" viewBox="0 0 760 260" role="img" aria-label="Prediction chart"></svg>
+              </div>
+
+              <div class="card analysis-panel wide">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Prototype explainability</p>
+                  <h3>Prototype explainability</h3>
+                  </div>
+                </div>
+                <div class="contributor-chart" id="contributorChart"></div>
+                <p class="analysis-text emphasis">
+                  Rule-based prototype explanation; contributors do not prove a source or cause.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="alerts" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Response workflow</p>
+                <h3>Alerts &amp; Recommendations</h3>
+              </div>
+              <div class="alert-toolbar">
+                <button class="filter-chip alert-tab active" data-alert-filter="all">All</button>
+                <button class="filter-chip alert-tab" data-alert-filter="new">New</button>
+                <button class="filter-chip alert-tab" data-alert-filter="warning">Warning</button>
+                <button class="filter-chip alert-tab" data-alert-filter="critical">Critical</button>
+              </div>
+            </div>
+            <div id="alertList" class="alert-list"></div>
+          </section>
+
+          <section id="nodes" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Device management</p>
+                <h3>Sensor Nodes</h3>
+              </div>
+              <span class="demo-badge">DEMO MODE</span>
+            </div>
+
+            <div class="nodes-layout">
+              <div class="card add-node-card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">New installation</p>
+                    <h3>Add New Node</h3>
+                  </div>
+                </div>
+                <form id="newNodeForm" class="node-form">
+                  <label>
+                    <span>Node ID</span>
+                    <input type="text" id="nodeIdInput" placeholder="JR-06" required />
+                  </label>
+                  <label>
+                    <span>Location</span>
+                    <input type="text" id="locationInput" placeholder="Reservoir North" required />
+                  </label>
+                  <label>
+                    <span>Sensor configuration</span>
+                    <input type="text" id="sensorInput" placeholder="TDS + Turbidity + Temperature" required />
+                  </label>
+                  <button type="submit" class="primary-button">Add Node</button>
+                </form>
+              </div>
+
+              <div id="sensorNodeList" class="sensor-node-list"></div>
+            </div>
+          </section>
+
+          <section id="health" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Diagnostics</p>
+                <h3>Sensor Health</h3>
+                <p class="page-subtitle">Monitor connectivity, data quality and calibration status across every sensor node.</p>
+              </div>
+              <div class="page-header-actions">
+                <span class="demo-badge">DEMO MODE</span>
+                <button class="voice-context-button" type="button" data-voice-context="health">🔊 Read health</button>
+              </div>
+            </div>
+            <div id="sensorHealthList" class="sensor-health-grid"></div>
+          </section>
+
+          <section id="calibration" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Maintenance</p>
+                <h3>Sensor Calibration</h3>
+                <p class="page-subtitle">Check and record calibration status before interpreting sensor readings.</p>
+              </div>
+              <span class="demo-badge">DEMO MODE</span>
+            </div>
+            <div class="card calibration-card">
+              <div class="calibration-grid" id="calibrationGrid"></div>
+            </div>
+          </section>
+
+          <section id="demo" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Presentation mode</p>
+                <h3>Simulate Water-Quality Events</h3>
+              </div>
+              <div class="page-header-actions">
+                <button class="voice-context-button" type="button" data-voice-context="demo">🔊 Read demo status</button>
+                <button class="secondary-button reset-demo" id="resetSimulationButton">RESET SIMULATION</button>
+              </div>
+            </div>
+
+            <div class="demo-panel card">
+              <div class="demo-controls">
+                <label><span>Target node</span><select id="demoNodeSelect"></select></label>
+                <span class="demo-badge" id="activeDemoEvent">NORMAL · DEMO DATA</span>
+                <button class="secondary-button" id="resolveDemoEventButton">Resolve Event</button>
+              </div>
+              <div class="demo-buttons">
+                <button class="demo-button normal" data-demo="normal">Normal</button>
+                <button class="demo-button warning" data-demo="sediment">Turbidity Event</button>
+                <button class="demo-button amber" data-demo="tds">TDS Spike</button>
+                <button class="demo-button critical" data-demo="multi">Multi-Parameter Anomaly</button>
+                <button class="demo-button aqua" data-demo="oxygen">Oxygen Depletion · Simulated DO</button>
+                <button class="demo-button warning" data-demo="failure-disconnected">Sensor Failure · Disconnected</button>
+                <button class="demo-button warning" data-demo="failure-stale">Sensor Failure · Stale</button>
+                <button class="demo-button warning" data-demo="failure-constant">Sensor Failure · Constant</button>
+                <button class="demo-button critical" data-demo="failure-invalid">Sensor Failure · Invalid</button>
+              </div>
+
+              <div class="demo-flow">
+                <span>Sensor Change</span>
+                <span>↓</span>
+                <span>Anomaly Detected</span>
+                <span>↓</span>
+                <span>Location Identified</span>
+                <span>↓</span>
+                <span>Trend Predicted</span>
+                <span>↓</span>
+                <span>Cause Contributors Explained</span>
+                <span>↓</span>
+                <span>Recommended Action</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="settings" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Configuration</p>
+                <h3>Settings</h3>
+              </div>
+              <span class="demo-badge">Local storage</span>
+            </div>
+            <div class="card settings-card">
+              <form id="settingsForm" class="settings-form">
+                <div class="settings-group">
+                  <h4>Alert Thresholds</h4>
+                  <label><span>TDS warning</span><input type="number" id="tdsWarning" /></label>
+                  <label><span>Turbidity warning</span><input type="number" id="turbidityWarning" /></label>
+                  <label><span>Temperature warning</span><input type="number" id="temperatureWarning" /></label>
+                </div>
+                <div class="settings-group">
+                  <h4>Monitoring</h4>
+                  <label><span>Refresh interval (s)</span><input type="number" id="refreshInterval" /></label>
+                </div>
+                <div class="settings-group">
+                  <h4>Units</h4>
+                  <label><span>Temperature</span><input type="text" id="tempUnit" /></label>
+                </div>
+                <div class="settings-group toggles">
+                  <h4>Demo Mode</h4>
+                  <label class="switch-row"><span>Enable/Disable</span><input type="checkbox" id="demoModeEnabled" /></label>
+                  <label class="switch-row"><span>Notifications</span><input type="checkbox" id="notificationsEnabled" /></label>
+                </div>
+                <div class="settings-group toggles">
+                  <h4>Voice Guide</h4>
+                  <label class="switch-row"><span>Automatic short page introductions</span><input type="checkbox" id="voiceAutoIntroSetting" /></label>
+                  <p class="settings-help">Choose language and speech speed in the header Voice Guide. Use Replay welcome there to hear the introduction again.</p>
+                  <button class="secondary-button" id="settingsOpenVoiceGuide" type="button">Open Voice Guide / आवाज़ गाइड खोलें</button>
+                </div>
+                <button type="submit" class="primary-button">Save Settings</button>
+              </form>
+            </div>
+          </section>
+
+          <section id="about" class="page">
+            <div class="page-header">
+              <div>
+                <p class="eyebrow">Mission</p>
+                <h3>About Jal Raksha</h3>
+              </div>
+            </div>
+
+            <div class="about-grid">
+              <article class="card about-card">
+                <h4>Purpose</h4>
+                <p>
+                  Jal Raksha is designed to help municipal teams and water operators identify unusual water-quality changes before they become operational issues requiring inspection and lab confirmation.
+                </p>
+              </article>
+              <article class="card about-card">
+                <h4>Monitoring philosophy</h4>
+                <p>
+                  The system focuses on anomaly detection, trend analysis and explainable alerts. It does not claim to identify every potential source or guarantee water safety from sensor data alone.
+                </p>
+              </article>
+              <article class="card about-card">
+                <h4>Hardware readiness</h4>
+                <p>
+                  Demo Data is simulated. Hardware Mode is shown as not connected until an ESP32/API provider is available. This prototype simulates pH and dissolved oxygen; it does not claim the physical prototype measures dissolved oxygen.
+                </p>
+              </article>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div id="nodeDetailModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <div class="modal-dialog card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Node details</p>
+            <h3 id="modalNodeTitle">JR-04</h3>
+          </div>
+          <button class="icon-button close-icon" data-close-modal="true" aria-label="Close">✕</button>
+        </div>
+        <div id="nodeDetailContent" class="modal-content"></div>
+      </div>
+    </div>
+
+    <aside id="sensorDrawer" class="sensor-drawer hidden" aria-hidden="true">
+      <div class="sensor-drawer-header">
+        <div>
+          <p class="eyebrow">Sensor detail</p>
+          <h3 id="sensorDrawerTitle">TDS Sensor</h3>
+        </div>
+        <button class="icon-button close-icon" id="closeSensorDrawer" aria-label="Close">✕</button>
+      </div>
+      <div id="sensorDrawerContent" class="sensor-drawer-content"></div>
+    </aside>
+
+    <div id="calibrationWizard" class="wizard-overlay hidden" aria-hidden="true">
+      <div class="wizard-backdrop" data-close-wizard="true"></div>
+      <div class="wizard-panel card">
+        <div class="wizard-header">
+          <div>
+            <p class="eyebrow">Calibration wizard</p>
+            <h3>Sensor calibration</h3>
+          </div>
+          <button class="icon-button close-icon" data-close-wizard="true" aria-label="Close">✕</button>
+        </div>
+        <div id="wizardContent" class="wizard-content"></div>
+      </div>
+    </div>
+
+    <script src="app.js?v=9"></script>
+  </body>
+</html>

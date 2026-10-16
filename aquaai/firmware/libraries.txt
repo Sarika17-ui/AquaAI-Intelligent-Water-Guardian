@@ -1,0 +1,21 @@
+# AquaAI ESP32 Firmware — Required Libraries
+#
+# All libraries listed below are bundled with the official Espressif ESP32
+# Arduino core and require NO separate Library Manager installation.
+# They are available automatically once the ESP32 board package is installed.
+#
+# Library               | Header Used         | Source
+# ----------------------|---------------------|------------------------------------
+# WiFi                  | <WiFi.h>            | ESP32 Arduino core (built-in)
+# WiFiClientSecure      | <WiFiClientSecure.h>| ESP32 Arduino core (built-in)
+# HTTPClient            | <HTTPClient.h>      | ESP32 Arduino core (built-in)
+# Arduino               | <Arduino.h>         | ESP32 Arduino core (built-in)
+#
+# Board Package to install via Arduino IDE Boards Manager:
+#   Name:    esp32 by Espressif Systems
+#   Version: 2.x or 3.x (both work; 3.x is recommended)
+#   URL to add to "Additional Board Manager URLs":
+#     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+#
+# No third-party libraries (e.g. ThingSpeak.h) are used or required.
+# HTTP POST to ThingSpeak is done directly via HTTPClient.
